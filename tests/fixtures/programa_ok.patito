@@ -1,0 +1,10 @@
+programa prueba;
+
+vars x, y : entero;
+resultado : flotante;
+
+inicio {
+    escribe (x);
+}
+
+fin

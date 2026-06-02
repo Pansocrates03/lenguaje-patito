@@ -1,0 +1,5 @@
+programa invalido;
+inicio {
+    escribe (x)
+}
+fin

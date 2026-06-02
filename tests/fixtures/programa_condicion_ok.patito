@@ -1,0 +1,10 @@
+programa condicion;
+vars x : entero;
+inicio {
+    si (x > 0) {
+        escribe (x);
+    } sino {
+        escribe (0);
+    }
+}
+fin

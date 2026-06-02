@@ -1,0 +1,8 @@
+programa ciclo;
+vars x : entero;
+inicio {
+    mientras (x < 10) {
+        x = x + 1;
+    };
+}
+fin

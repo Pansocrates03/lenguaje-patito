@@ -1,0 +1,6 @@
+programa sinvars;
+inicio {
+    x = 5 + 3 * (2 - 1);
+    escribe (x);
+}
+fin
