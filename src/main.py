@@ -9,7 +9,7 @@ class Compilador:
         self.lenguaje_patito = crear_gramática(self.semantic)
 
     def run_tests(self):
-        from tests.runtests import run_tests
+        from tests.test_aritmetica import run_tests
         run_tests()
 
     def cargar_archivo(self, filename="programa.patito"):

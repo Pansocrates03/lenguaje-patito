@@ -1,0 +1,7 @@
+programa aritmetica_simple;
+
+inicio
+{
+    escribe(5 + 3);
+}
+fin
