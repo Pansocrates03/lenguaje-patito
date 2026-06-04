@@ -232,7 +232,16 @@ def make_actions(ctx):
         PN — Al terminar cada ítem dentro de escribe(...).
         Genera cuádruplo PRINT para el valor o letrero correspondiente.
         """
-        # ejecutar PN imprime_item...
+        # El resultado de la expresión ya está resuelto en pila_operandos
+        if ctx.pila_operandos:
+            valor = ctx.pila_operandos.pop()
+            ctx.pila_tipos.pop()  # limpiar el tipo correspondiente
+        else:
+            # Es un letrero (string literal)
+            valor = tokens[0]
+
+        ctx.fila_cuadruplos.append(Cuadruplo("PRINT", valor, "_", "_"))
+        
         return tokens
 
     # ── DECLARACIÓN DE VARIABLES ──────────────────────────────────────────────

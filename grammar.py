@@ -1,15 +1,23 @@
-from pyparsing import Optional, Suppress, Word, ZeroOrMore, OneOrMore, Literal, alphas, alphanums, Forward, nums, Regex, Group, delimitedList
+from pyparsing import Keyword, Optional, Suppress, Word, ZeroOrMore, OneOrMore, Literal, alphas, alphanums, Forward, nums, Regex, Group, delimitedList
 from semantic_actions import make_actions
 
 def crear_gramática(semantic_context):
     """Crea la gramática del lenguaje Patito con acciones semánticas"""
 
     actions = make_actions(semantic_context)
+
+    # Palabras reservadas
+    PALABRAS_RESERVADAS = (
+        Keyword("programa") | Keyword("vars") | Keyword("entero") | 
+        Keyword("flotante") | Keyword("inicio") | Keyword("fin") |
+        Keyword("si") | Keyword("sino") | Keyword("mientras") | 
+        Keyword("escribe") | Keyword("nula")
+    )
     
     # TOKENS
     # Se definen los tokens básicos del lenguaje
 
-    IDENTIFICADOR = Word(alphas + "_", alphanums + "_")
+    IDENTIFICADOR = ~PALABRAS_RESERVADAS + Word(alphas + "_", alphanums + "_")
     TIPO = Literal("entero") | Literal("flotante")
     CTE_ENTERA = Word(nums)
     CTE_FLOTANTE = Regex(r'\d+\.\d+')
@@ -90,6 +98,16 @@ def crear_gramática(semantic_context):
         + Literal(";")
     )
 
+    IMPRIME_ITEM = (LETRERO | EXPRESION).copy().addParseAction(actions["action_imprime_item"])
+    IMPRIME = (
+        Literal("escribe")
+        + Literal("(")
+        + IMPRIME_ITEM
+        + ZeroOrMore(Literal(",") + IMPRIME_ITEM)
+        + Literal(")")
+        + Literal(";")
+    )
+
     LLAMADA <<= (
         IDENTIFICADOR
         + Literal("(")
@@ -98,15 +116,6 @@ def crear_gramática(semantic_context):
             + ZeroOrMore(Literal(",") + EXPRESION)
         )
         + Literal(")")
-    )
-
-    IMPRIME = (
-        Literal("escribe")
-        + Literal("(")
-        + (LETRERO | EXPRESION)
-        + ZeroOrMore(Literal(",") + (LETRERO | EXPRESION))
-        + Literal(")")
-        + Literal(";")
     )
 
     ESTATUTO <<= ASIGNA | CONDICION | CICLO | (LLAMADA  + Literal(";")) | IMPRIME | (Literal("[") + ZeroOrMore(ESTATUTO) + Literal("]"))
