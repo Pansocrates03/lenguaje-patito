@@ -1,0 +1,14 @@
+programa test_sumas;
+
+vars
+    x: entero;
+    y: entero;
+    z: entero;
+
+inicio
+{
+    x = 5;
+    y = 3;
+    z = x + y;
+}
+fin

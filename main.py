@@ -1,10 +1,12 @@
 import sys
-from grammar import lenguaje_patito
+from grammar import crear_gramática
+from semantic import SemanticContext
 
 class Compilador:
 
     def __init__(self):
-        pass
+        self.semantic = SemanticContext()
+        self.lenguaje_patito = crear_gramática(self.semantic)
 
     def run_tests(self):
         from tests.runtests import run_tests
@@ -19,9 +21,9 @@ class Compilador:
                     print(f"Error: El archivo '{filename}' está vacío.")
                     return
                 
-                # Validar sintaxis
+                # Validar sintaxis y realizar análisis semántico
                 try:
-                    lenguaje_patito.parse_string(content)
+                    self.lenguaje_patito.parse_string(content)
                     print("Archivo cargado y validado correctamente.")
                 except Exception as e:
                     print(f"Error de sintaxis: {e}")
@@ -33,7 +35,13 @@ class Compilador:
             print(f"Error al cargar el archivo: {e}")
     
     def imprimir_cuadruplos(self):
-        print("Función de impresión de cuadruplos aún no implementada.")
+        cuadruplos = self.semantic.obtener_cuadruplos()
+        if cuadruplos:
+            print("\n=== CUÁDRUPLOS GENERADOS ===")
+            for i, cuad in enumerate(cuadruplos):
+                print(f"{i}: {cuad}")
+        else:
+            print("\nNo se generaron cuádruplos.")
 
 def main():
     if len(sys.argv) != 2:
@@ -46,4 +54,5 @@ def main():
     compilador.imprimir_cuadruplos()
 
 
-if __name__ == "__main__":    main()
+if __name__ == "__main__":
+    main()

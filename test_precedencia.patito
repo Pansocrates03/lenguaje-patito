@@ -1,0 +1,16 @@
+programa test_precedencia;
+
+vars
+    a: entero;
+    b: entero;
+    c: entero;
+    d: entero;
+
+inicio
+{
+    a = 5;
+    b = 3;
+    c = 2;
+    d = a + b * c;
+}
+fin
