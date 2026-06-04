@@ -1,6 +1,6 @@
 import sys
 from grammar import crear_gramática
-from semantic import SemanticContext
+from semantic_context import SemanticContext
 
 class Compilador:
 

@@ -3,18 +3,13 @@ programa mi_programa;
 vars
     x: entero;
     y: flotante;
-
-entero suma(a: entero, b: entero)
-{
-    {
-        resultado = a + b;
-    }
-}
+    resultado: flotante;
 
 inicio
 {
     x = 10;
     y = 3.14;
+    resultado = x + y;
     escribe (x);
 }
 fin
