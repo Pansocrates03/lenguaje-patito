@@ -49,6 +49,55 @@ def make_actions(ctx):
         """
         ctx.finalizar_expresion()
         return tokens
+    
+    def action_factor_abre_paren(s, l, tokens):
+        """
+        PN — Al reconocer un paréntesis de apertura en un FACTOR.
+        Empuja el paréntesis a pila_operadores para marcar el inicio de la subexpresión.
+        """
+        print(f"DEBUG abre_paren - pila_operadores antes: {ctx.pila_operadores}")
+        ctx.pila_operadores.append("(")
+        print(f"DEBUG abre_paren - pila_operadores después: {ctx.pila_operadores}")
+        return tokens
+    
+    def action_factor_cierra_paren(s, l, tokens):
+        """
+        PN — Al reconocer un paréntesis de cierre en un FACTOR.
+        Resuelve operadores pendientes hasta encontrar el paréntesis de apertura.
+        Elimina el paréntesis de apertura de pila_operadores.
+        """
+        print(f"DEBUG cierra_paren - pila_operadores antes: {ctx.pila_operadores}")
+        while ctx.pila_operadores and ctx.pila_operadores[-1] != "(":
+            ctx.ejecutar_operacion()
+        ctx.pila_operadores.pop()  # quitar el "("
+        print(f"DEBUG cierra_paren - pila_operadores después: {ctx.pila_operadores}")
+        return tokens
+    
+    def action_factor_signo(s, l, tokens):
+        print(f"DEBUG factor_signo tokens: {list(tokens)}")
+        token_list = list(tokens)
+        
+        # Identificar si hay signo y cuál es el operando
+        if len(token_list) == 2 and token_list[0] in ["+", "-"]:
+            signo   = token_list[0]
+            operando = token_list[1]
+        else:
+            signo    = None
+            operando = token_list[0]
+
+        # push_operando ya determina el tipo internamente
+        ctx.push_operando(operando)
+
+        # Si hay signo negativo, generar cuádruplo (*, -1, operando, t1)
+        if signo == "-":
+            op = ctx.pila_operandos.pop()
+            tp = ctx.pila_tipos.pop()
+            resultado = ctx.nuevo_temporal()
+            ctx.fila_cuadruplos.append(Cuadruplo("*", "-1", op, resultado))
+            ctx.pila_operandos.append(resultado)
+            ctx.pila_tipos.append(tp)
+
+        return tokens
 
     # ── ASIGNA ───────────────────────────────────────────────────────────────
 
@@ -292,6 +341,9 @@ def make_actions(ctx):
         "action_mul_op":        action_mul_op,
         "action_add_op":        action_add_op,
         "action_expresion_end": action_expresion_end,
+        "action_factor_abre_paren": action_factor_abre_paren,
+        "action_factor_cierra_paren": action_factor_cierra_paren,
+        "action_factor_signo": action_factor_signo,
         # Asignación
         "action_asigna_id":     action_asigna_id,
         "action_asigna_op":     action_asigna_op,
@@ -315,4 +367,6 @@ def make_actions(ctx):
         "action_vars_decl":     action_vars_decl,
         "action_funcion_inicio": action_funcion_inicio,
         "action_funcion_end":   action_funcion_end,
+        # Test
+        "test": lambda s, l, t: print(f"DEBUG test action triggered with tokens: {t}")
     }

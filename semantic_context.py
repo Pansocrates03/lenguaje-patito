@@ -124,8 +124,9 @@ class SemanticContext:
     def push_operador(self, operador):
         # Respetar precedencia: ejecutar operaciones pendientes de mayor o igual precedencia
         while (self.pila_operadores
-               and self.pila_operadores[-1] != "="   # nunca consumir el = de asignación
-               and self.precedencia(self.pila_operadores[-1]) >= self.precedencia(operador)):
+           and self.pila_operadores[-1] != "="
+           and self.pila_operadores[-1] != "("   # ← agregar esta condición
+           and self.precedencia(self.pila_operadores[-1]) >= self.precedencia(operador)):
             self.ejecutar_operacion()
         self.pila_operadores.append(operador)
 
@@ -167,6 +168,9 @@ class SemanticContext:
     # ── operaciones ──────────────────────────────────────────────────────────
 
     def ejecutar_operacion(self):
+        print(f"DEBUG ejecutar_op - pila_operadores: {self.pila_operadores}")
+        print(f"DEBUG ejecutar_op - pila_operandos: {self.pila_operandos}")
+        print(f"DEBUG ejecutar_op - pila_tipos: {self.pila_tipos}")
         """Genera un cuádruplo para la operación en la cima de pila_operadores"""
         if not self.pila_operadores or len(self.pila_operandos) < 2:
             return
@@ -194,8 +198,12 @@ class SemanticContext:
 
     def finalizar_expresion(self):
         """Procesa todos los operadores pendientes al final de una expresión"""
-        while self.pila_operadores and self.pila_operadores[-1] != "=":
+        while self.pila_operadores and self.pila_operadores[-1] != "=" and self.pila_operadores[-1] != "(":
             self.ejecutar_operacion()
+        
+        # Si hay un ( en la cima, significa que terminamos la subexpresión — eliminarlo
+        if self.pila_operadores and self.pila_operadores[-1] == "(":
+            self.pila_operadores.pop()
 
     def obtener_cuadruplos(self):
         """Retorna la lista de cuádruplos generados"""

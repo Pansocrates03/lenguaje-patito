@@ -47,9 +47,21 @@ def crear_gramática(semantic_context):
     CTE = CTE_FLOTANTE | CTE_ENTERA 
     
 
-    factor_base = (Literal("(") + EXPRESION + Literal(")")) | LLAMADA | (Optional(Literal("+") | Literal("-")) + (IDENTIFICADOR | CTE))
-    FACTOR = factor_base.copy()
-    FACTOR.setParseAction(actions["action_operando"])
+    # Camino 1: ( EXPRESION ) — con centinela
+    abre_paren = Literal("(").copy().addParseAction(actions["action_factor_abre_paren"])
+    factor_paren = (
+        abre_paren
+        + EXPRESION
+        + Literal(")")   # sin acción — el pop del ( lo hace finalizar_expresion
+    )
+
+    # Camino 2: [+|-] id | CTE — con signo opcional
+    factor_base = (
+        Optional(Literal("+") | Literal("-")) + (IDENTIFICADOR | CTE)
+    ).addParseAction(actions["action_factor_signo"])
+
+    # FACTOR sin acción global — cada camino tiene la suya
+    FACTOR = factor_paren | factor_base #| LLAMADA
         
     TERMINO = (
         FACTOR
@@ -115,7 +127,7 @@ def crear_gramática(semantic_context):
             EXPRESION
             + ZeroOrMore(Literal(",") + EXPRESION)
         )
-        + Literal(")")
+        + Literal(")").addParseAction(actions["test"])
     )
 
     ESTATUTO <<= ASIGNA | CONDICION | CICLO | (LLAMADA  + Literal(";")) | IMPRIME | (Literal("[") + ZeroOrMore(ESTATUTO) + Literal("]"))

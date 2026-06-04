@@ -9,7 +9,7 @@ inicio
 {
     x = 10;
     y = 3.14;
-    resultado = x + y;
+    resultado = 1 + (2 - 2) * 4;
     escribe (x);
 }
 fin
