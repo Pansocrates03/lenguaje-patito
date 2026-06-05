@@ -93,6 +93,126 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
             # 4: Instrucción del bloque principal
             ("PRINT", "1", "_", "_")
         ]
+    ),
+    (
+        "Llamada a funcion sin parametros (Nula)",
+        """
+        programa test_call_simple;
+        
+        nula saludo() {
+            {
+                escribe(1);
+            }
+        };
+        
+        inicio {
+            saludo();
+        } fin
+        """,
+        [
+            # 0: Salto inicial
+            ("GOTO", "_", "_", 3),
+            
+            # --- Declaración de 'saludo' ---
+            # 1: Cuerpo
+            ("PRINT", "1", "_", "_"),
+            # 2: Fin de función
+            ("ENDFUNC", "_", "_", "_"),
+            
+            # --- Ejecución del inicio ---
+            # 3: ERA (Reserva de memoria)
+            ("ERA", "saludo", "_", "_"),
+            
+            # 4: GOSUB (Salto a la primera instrucción de la función, índice 1)
+            ("GOSUB", "saludo", "_", 1)
+        ]
+    ),
+    (
+        "Llamada a funcion con parametros",
+        """
+        programa test_call_params;
+        
+        nula suma(a: entero, b: entero) {
+            {
+                escribe(a + b);
+            }
+        };
+        
+        inicio {
+            suma(5, 10);
+        } fin
+        """,
+        [
+            # 0: Salto inicial
+            ("GOTO", "_", "_", 4),
+            
+            # --- Declaración de 'suma' ---
+            # 1: Aritmética local
+            ("+", "a", "b", "t1"),
+            # 2: Imprime
+            ("PRINT", "t1", "_", "_"),
+            # 3: Fin de función
+            ("ENDFUNC", "_", "_", "_"),
+            
+            # --- Ejecución del inicio ---
+            # 4: ERA
+            ("ERA", "suma", "_", "_"),
+            
+            # 5: Evaluación y envío del primer parámetro
+            ("PARAM", "5", "_", "param0"),
+            
+            # 6: Evaluación y envío del segundo parámetro
+            ("PARAM", "10", "_", "param1"),
+            
+            # 7: GOSUB (Salta al índice 1)
+            ("GOSUB", "suma", "_", 1)
+        ]
+    ),
+    (
+        "Llamada a funcion con retorno en expresion",
+        """
+        programa test_call_return;
+        vars x: entero;
+        
+        entero multiplica(a: entero) {
+            {
+                escribe(a);
+            }
+        };
+        
+        inicio {
+            x = multiplica(5) + 2;
+        } fin
+        """,
+        [
+            # 0: Salto inicial
+            ("GOTO", "_", "_", 3),
+            
+            # --- Declaración de 'multiplica' ---
+            # 1: Imprime local
+            ("PRINT", "a", "_", "_"),
+            # 2: Fin de función
+            ("ENDFUNC", "_", "_", "_"),
+            
+            # --- Ejecución del inicio ---
+            # 3: ERA
+            ("ERA", "multiplica", "_", "_"),
+            
+            # 4: Parámetro
+            ("PARAM", "5", "_", "param0"),
+            
+            # 5: GOSUB al índice 1
+            ("GOSUB", "multiplica", "_", 1),
+            
+            # 6: Parche de extracción del retorno (generado por action_llamada_end)
+            ("=", "multiplica", "_", "t1"),
+            
+            # 7: Continuación de la expresión principal (+ 2)
+            ("+", "t1", "2", "t2"),
+            
+            # 8: Asignación final a la variable 'x'
+            ("=", "t2", "_", "x")
+        ]
     )
 ])
 def test_generacion_cuadruplos_funciones(nombre_prueba, codigo, expected_ops):
