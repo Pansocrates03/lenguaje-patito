@@ -40,7 +40,7 @@ def crear_gramática(semantic_context):
         + Suppress(Literal(":"))
         + TIPO
         + Suppress(Literal(";"))
-    ).addParseAction(actions["action_vars_decl"])
+    ).add_parse_action(actions["action_vars_decl"])
     VARSLIST = ZeroOrMore(VARS_LINE)
     VARS = Literal("vars") + VARSLIST
 
@@ -48,7 +48,7 @@ def crear_gramática(semantic_context):
     
 
     # Camino 1: ( EXPRESION ) — con centinela
-    abre_paren = Literal("(").copy().addParseAction(actions["action_factor_abre_paren"])
+    abre_paren = Literal("(").copy().add_parse_action(actions["action_factor_abre_paren"])
     factor_paren = (
         abre_paren
         + EXPRESION
@@ -58,7 +58,7 @@ def crear_gramática(semantic_context):
     # Camino 2: [+|-] id | CTE — con signo opcional
     factor_base = (
         Optional(Literal("+") | Literal("-")) + (IDENTIFICADOR | CTE)
-    ).addParseAction(actions["action_factor_signo"])
+    ).add_parse_action(actions["action_factor_signo"])
 
     # FACTOR sin acción global — cada camino tiene la suya
     FACTOR = factor_paren | factor_base | LLAMADA
@@ -86,36 +86,36 @@ def crear_gramática(semantic_context):
     ).setParseAction(actions["action_expresion_end"])
     
     ASIGNA = (
-        IDENTIFICADOR.copy().addParseAction(actions["action_asigna_id"])
-        + Literal("=").addParseAction(actions["action_asigna_op"])
-        + EXPRESION.copy().addParseAction(actions["action_asigna_end"])
-        + Literal(";").addParseAction(actions["action_asigna_cierre"])
+        IDENTIFICADOR.copy().add_parse_action(actions["action_asigna_id"])
+        + Literal("=").add_parse_action(actions["action_asigna_op"])
+        + EXPRESION.copy().add_parse_action(actions["action_asigna_end"])
+        + Literal(";").add_parse_action(actions["action_asigna_cierre"])
     )
 
     CONDICION = (
         Literal("si")
         + Literal("(")
-        + EXPRESION.copy().addParseAction(actions["action_condicion_eval"]) # PN1
+        + EXPRESION.copy().add_parse_action(actions["action_condicion_eval"]) # PN1
         + Literal(")")
         + CUERPO
         + Optional(
-            Literal("sino").addParseAction(actions["action_condicion_sino"]) # PN2
+            Literal("sino").add_parse_action(actions["action_condicion_sino"]) # PN2
             + CUERPO
         )
         + Literal(";")
-    ).addParseAction(actions["action_condicion_end"]) # PN3
+    ).add_parse_action(actions["action_condicion_end"]) # PN3
 
     CICLO = (
-        Literal("mientras").addParseAction(actions["action_ciclo_inicio"])
+        Literal("mientras").add_parse_action(actions["action_ciclo_inicio"])
         + Literal("(")
-        + EXPRESION.copy().addParseAction(actions["action_ciclo_eval"])
+        + EXPRESION.copy().add_parse_action(actions["action_ciclo_eval"])
         + Literal(")")
         + Literal("haz")
         + CUERPO
-        + Literal(";").addParseAction(actions["action_ciclo_end"])
+        + Literal(";").add_parse_action(actions["action_ciclo_end"])
     )
 
-    IMPRIME_ITEM = (LETRERO | EXPRESION).copy().addParseAction(actions["action_imprime_item"])
+    IMPRIME_ITEM = (LETRERO | EXPRESION).copy().add_parse_action(actions["action_imprime_item"])
     IMPRIME = (
         Literal("escribe")
         + Literal("(")
@@ -129,10 +129,10 @@ def crear_gramática(semantic_context):
     LLAMADA_INICIO = (
         IDENTIFICADOR 
         + Literal("(")
-    ).addParseAction(actions["action_llamada_inicio"])
+    ).add_parse_action(actions["action_llamada_inicio"])
     
     # 2. Tu argumento con su acción para los parámetros
-    ARGUMENTO = EXPRESION.copy().addParseAction(actions["action_llamada_arg"])
+    ARGUMENTO = EXPRESION.copy().add_parse_action(actions["action_llamada_arg"])
 
     # 3. La regla completa reconstruida
     LLAMADA <<= (
@@ -141,7 +141,7 @@ def crear_gramática(semantic_context):
             ARGUMENTO
             + ZeroOrMore(Literal(",") + ARGUMENTO)
         )
-        + Literal(")").addParseAction(actions["action_llamada_end"])
+        + Literal(")").add_parse_action(actions["action_llamada_end"])
     )
 
     ESTATUTO <<= (
@@ -159,13 +159,13 @@ def crear_gramática(semantic_context):
         IDENTIFICADOR
         + Literal(":")
         + TIPO
-    ).addParseAction(actions["action_funcion_param"])
+    ).add_parse_action(actions["action_funcion_param"])
 
     # Atamos el PN1 exclusivamente al tipo y nombre, ANTES de leer los paréntesis
     ENCABEZADO_FUNC = (
         (TIPO | Literal("nula")) 
         + IDENTIFICADOR
-    ).addParseAction(actions["action_funcion_inicio"])
+    ).add_parse_action(actions["action_funcion_inicio"])
 
     FUNCS = (
         ENCABEZADO_FUNC
@@ -179,16 +179,16 @@ def crear_gramática(semantic_context):
         + CUERPO
         + Literal("}")
         + Literal(";")
-    ).addParseAction(actions["action_funcion_end"])
+    ).add_parse_action(actions["action_funcion_end"])
 
     # Definir la estructura del programa
     lenguaje_patito = (
-        Literal("programa").addParseAction(actions["action_programa_inicio"])
+        Literal("programa").add_parse_action(actions["action_programa_inicio"])
         + IDENTIFICADOR
         + Literal(";")
         + Optional(VARS)
         + ZeroOrMore(FUNCS)
-        + Literal("inicio").addParseAction(actions["action_main_inicio"])
+        + Literal("inicio").add_parse_action(actions["action_main_inicio"])
         + CUERPO
         + Literal("fin")
     )

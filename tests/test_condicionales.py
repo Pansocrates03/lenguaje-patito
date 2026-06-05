@@ -6,7 +6,7 @@ from semantic_context import SemanticContext
 def compilar_y_obtener_cuadruplos(codigo: str) -> list:
     semantic = SemanticContext()
     lenguaje_patito = crear_gramática(semantic)
-    lenguaje_patito.parseString(codigo)
+    lenguaje_patito.parse_string(codigo)
     return semantic.obtener_cuadruplos()
 
 @pytest.mark.parametrize("nombre_prueba, codigo, expected_ops", [

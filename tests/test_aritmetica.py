@@ -8,8 +8,8 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
     # Inicializamos la gramática inyectando un contexto semántico limpio
     lenguaje_patito = crear_gramática(semantic)
     
-    # parseString detona las acciones semánticas y llena la fila de cuádruplos
-    lenguaje_patito.parseString(codigo)
+    # parse_string detona las acciones semánticas y llena la fila de cuádruplos
+    lenguaje_patito.parse_string(codigo)
     return semantic.obtener_cuadruplos()
 
 @pytest.mark.parametrize("nombre_prueba, codigo, expected_ops", [

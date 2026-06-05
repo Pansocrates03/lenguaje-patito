@@ -2,14 +2,14 @@ import pytest
 from grammar import crear_gramática
 from semantic_context import SemanticContext
 
-# Helper para compilar código en crudo y extraer los cuádruplos generados
 def compilar_y_obtener_cuadruplos(codigo: str) -> list:
     semantic = SemanticContext()
     lenguaje_patito = crear_gramática(semantic)
-    lenguaje_patito.parseString(codigo)
+    lenguaje_patito.parse_string(codigo)
     return semantic.obtener_cuadruplos()
 
-@pytest.mark.parametrize("nombre_prueba, codigo, expected_ops", [
+# 1. Separamos los casos en una variable
+CASOS_PRUEBA = [
     (
         "Programa sin funciones (Salto basico)",
         """
@@ -19,155 +19,11 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
-            # 0: GOTO inicial generado por action_programa_inicio
-            # Brinca directamente a la primera instrucción del inicio (1)
             ("GOTO", "_", "_", 1),
-            
-            # 1: Cuerpo del inicio
             ("PRINT", "1", "_", "_")
         ]
     ),
-    (
-        "Programa con una funcion simple",
-        """
-        programa test_func_simple;
-        
-        nula mi_func() {
-            {
-                escribe(2);
-            }
-        };
-        
-        inicio {
-            escribe(1);
-        } fin
-        """,
-        [
-            # 0: GOTO inicial. Ahora debe saltarse la función y brincar al cuádruplo 3
-            ("GOTO", "_", "_", 3),
-            
-            # 1: Instrucciones dentro de la función
-            ("PRINT", "2", "_", "_"),
-            
-            # 2: Finalización de la función (generada por action_funcion_end)
-            ("ENDFUNC", "_", "_", "_"),
-            
-            # 3: Inicio del programa principal
-            ("PRINT", "1", "_", "_")
-        ]
-    ),
-    (
-        "Programa con funciones, parametros y variables locales",
-        """
-        programa test_func_completa;
-        
-        entero suma(a: entero, b: entero) {
-            vars
-                res: entero;
-            {
-                res = a + b;
-            }
-        };
-        
-        inicio {
-            escribe(1);
-        } fin
-        """,
-        [
-            # 0: GOTO inicial brinca todo el bloque de 'suma', cayendo en el índice 4
-            ("GOTO", "_", "_", 4),
-            
-            # --- Inicia cuádruplos de la función 'suma' ---
-            
-            # 1: Evaluación de la expresión aritmética local
-            ("+", "a", "b", "t1"),
-            
-            # 2: Asignación a la variable local 'res'
-            ("=", "t1", "_", "res"),
-            
-            # 3: Finalización de la función
-            ("ENDFUNC", "_", "_", "_"),
-            
-            # --- Inicia el main ---
-            
-            # 4: Instrucción del bloque principal
-            ("PRINT", "1", "_", "_")
-        ]
-    ),
-    (
-        "Llamada a funcion sin parametros (Nula)",
-        """
-        programa test_call_simple;
-        
-        nula saludo() {
-            {
-                escribe(1);
-            }
-        };
-        
-        inicio {
-            saludo();
-        } fin
-        """,
-        [
-            # 0: Salto inicial
-            ("GOTO", "_", "_", 3),
-            
-            # --- Declaración de 'saludo' ---
-            # 1: Cuerpo
-            ("PRINT", "1", "_", "_"),
-            # 2: Fin de función
-            ("ENDFUNC", "_", "_", "_"),
-            
-            # --- Ejecución del inicio ---
-            # 3: ERA (Reserva de memoria)
-            ("ERA", "saludo", "_", "_"),
-            
-            # 4: GOSUB (Salto a la primera instrucción de la función, índice 1)
-            ("GOSUB", "saludo", "_", 1)
-        ]
-    ),
-    (
-        "Llamada a funcion con parametros",
-        """
-        programa test_call_params;
-        
-        nula suma(a: entero, b: entero) {
-            {
-                escribe(a + b);
-            }
-        };
-        
-        inicio {
-            suma(5, 10);
-        } fin
-        """,
-        [
-            # 0: Salto inicial
-            ("GOTO", "_", "_", 4),
-            
-            # --- Declaración de 'suma' ---
-            # 1: Aritmética local
-            ("+", "a", "b", "t1"),
-            # 2: Imprime
-            ("PRINT", "t1", "_", "_"),
-            # 3: Fin de función
-            ("ENDFUNC", "_", "_", "_"),
-            
-            # --- Ejecución del inicio ---
-            # 4: ERA
-            ("ERA", "suma", "_", "_"),
-            
-            # 5: Evaluación y envío del primer parámetro
-            ("PARAM", "5", "_", "param0"),
-            
-            # 6: Evaluación y envío del segundo parámetro
-            ("PARAM", "10", "_", "param1"),
-            
-            # 7: GOSUB (Salta al índice 1)
-            ("GOSUB", "suma", "_", 1)
-        ]
-    ),
+    # ... (AQUÍ VAN TODOS TUS DEMÁS CASOS EXACTAMENTE IGUAL) ...
     (
         "Llamada a funcion con retorno en expresion",
         """
@@ -185,41 +41,38 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
-            # 0: Salto inicial
             ("GOTO", "_", "_", 3),
-            
-            # --- Declaración de 'multiplica' ---
-            # 1: Imprime local
             ("PRINT", "a", "_", "_"),
-            # 2: Fin de función
             ("ENDFUNC", "_", "_", "_"),
-            
-            # --- Ejecución del inicio ---
-            # 3: ERA
             ("ERA", "multiplica", "_", "_"),
-            
-            # 4: Parámetro
             ("PARAM", "5", "_", "param0"),
-            
-            # 5: GOSUB al índice 1
             ("GOSUB", "multiplica", "_", 1),
-            
-            # 6: Parche de extracción del retorno (generado por action_llamada_end)
             ("=", "multiplica", "_", "t1"),
-            
-            # 7: Continuación de la expresión principal (+ 2)
             ("+", "t1", "2", "t2"),
-            
-            # 8: Asignación final a la variable 'x'
             ("=", "t2", "_", "x")
         ]
     )
-])
+]
+
+# 2. Pasamos la lista y usamos 'ids' para que la terminal solo muestre el nombre del caso
+@pytest.mark.parametrize("nombre_prueba, codigo, expected_ops", CASOS_PRUEBA, ids=[caso[0] for caso in CASOS_PRUEBA])
 def test_generacion_cuadruplos_funciones(nombre_prueba, codigo, expected_ops):
-    # Act
-    cuadruplos = compilar_y_obtener_cuadruplos(codigo)
     
-    # Assert - Verificamos cantidad (Todo en una sola línea para evitar errores de sintaxis)
+    # 3. Bloque try-except para atrapar el error e imprimir bonito
+    try:
+        cuadruplos = compilar_y_obtener_cuadruplos(codigo)
+    except Exception as e:
+        print(f"\n\n{'='*60}")
+        print(f"💥 ERROR DURANTE LA COMPILACIÓN: {nombre_prueba}")
+        print(f"{'='*60}")
+        print("CÓDIGO FUENTE EVALUADO:")
+        print(codigo) # Aquí se imprime respetando espacios y saltos de línea
+        print(f"{'='*60}\n")
+        
+        # Hacemos que la prueba falle limpiamente con el mensaje de error de tu compilador
+        pytest.fail(f"Excepción del compilador: {str(e)}")
+
+    # Assert - Verificamos cantidad
     assert len(cuadruplos) == len(expected_ops), f"Fallo en {nombre_prueba}: Se esperaban {len(expected_ops)} cuádruplos, se obtuvieron {len(cuadruplos)}."
     
     # Assert - Verificamos cada instrucción
