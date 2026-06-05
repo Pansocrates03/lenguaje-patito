@@ -23,6 +23,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
+            ("GOTO", "_", "_", 1),       # Salto inicial al final del inicio
             # 0: Asignación inicial
             ("=", "5", "_", "x"),
             
@@ -31,13 +32,13 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
             
             # 2: Salto condicional si es falso. 
             # Brinca al cuádruplo 5 (fuera del ciclo) - PN2
-            ("GOTOF", "t1", "_", 5),
+            ("GOTOF", "t1", "_", 6),
             
             # 3: Cuerpo del ciclo
             ("PRINT", "x", "_", "_"),
             
             # 4: Fin del cuerpo. Salto incondicional al inicio (cuádruplo 1) - PN3
-            ("GOTO", "_", "_", 1)
+            ("GOTO", "_", "_", 2)
         ]
     ),
     (
@@ -54,6 +55,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
+            ("GOTO", "_", "_", 1),       # Salto inicial al final del inicio
             # 0: Asignación
             ("=", "0", "_", "contador"),
             
@@ -61,7 +63,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
             ("<", "contador", "10", "t1"),
             
             # 2: GOTOF. El ciclo ocupa más cuádruplos, ahora debe saltar al 7
-            ("GOTOF", "t1", "_", 7),
+            ("GOTOF", "t1", "_", 8),
             
             # 3: Cuerpo - imprime
             ("PRINT", "contador", "_", "_"),
@@ -73,7 +75,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
             ("=", "t2", "_", "contador"),
             
             # 6: GOTO incondicional de regreso al inicio de la evaluación (1)
-            ("GOTO", "_", "_", 1)
+            ("GOTO", "_", "_", 2)
         ]
     )
 ])

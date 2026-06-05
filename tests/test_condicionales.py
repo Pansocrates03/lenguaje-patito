@@ -23,19 +23,20 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
-            # 0: Asignación inicial
+            # 0: Salto inicial al final del inicio
+            ("GOTO", "_", "_", 1),       
+            
+            # 1: Asignación inicial
             ("=", "10", "_", "x"),
             
-            # 1: Evaluación de la condición
+            # 2: Evaluación de la condición
             (">", "x", "5", "t1"),
             
-            # 2: GOTOF (PN1). Brinca al cuádruplo 4 si la condición es falsa (fuera del 'si')
-            ("GOTOF", "t1", "_", 4),
+            # 3: GOTOF (PN1). Brinca al cuádruplo 5 si la condición es falsa
+            ("GOTOF", "t1", "_", 5),
             
-            # 3: Cuerpo del 'si' verdadero
+            # 4: Cuerpo del 'si' verdadero
             ("PRINT", "x", "_", "_")
-            
-            # PN3 rellena el GOTOF del cuádruplo 2 con el valor 4 al cerrar el estatuto
         ]
     ),
     (
@@ -53,25 +54,26 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
-            # 0: Asignación inicial
+            # 0: Salto inicial
+            ("GOTO", "_", "_", 1),
+            
+            # 1: Asignación inicial
             ("=", "10", "_", "x"),
             
-            # 1: Evaluación de la condición
+            # 2: Evaluación de la condición
             (">", "x", "5", "t1"),
             
-            # 2: GOTOF (PN1). Brinca al cuádruplo 5 si es falso (inicio del 'sino')
-            ("GOTOF", "t1", "_", 5),
+            # 3: GOTOF (PN1). Brinca al cuádruplo 6 si es falso (inicio del 'sino')
+            ("GOTOF", "t1", "_", 6),
             
-            # 3: Cuerpo del 'si' verdadero
+            # 4: Cuerpo del 'si' verdadero
             ("PRINT", "1", "_", "_"),
             
-            # 4: GOTO incondicional (PN2). Brinca al cuádruplo 6 para no ejecutar el 'sino'
-            ("GOTO", "_", "_", 6),
+            # 5: GOTO incondicional (PN2). Brinca al cuádruplo 7 para esquivar el 'sino'
+            ("GOTO", "_", "_", 7),
             
-            # 5: Cuerpo del 'sino' falso
+            # 6: Cuerpo del 'sino' falso
             ("PRINT", "0", "_", "_")
-            
-            # PN3 rellena el GOTO del cuádruplo 4 con el valor 6 al cerrar el estatuto
         ]
     ),
     (
@@ -91,26 +93,31 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
-            # 0: Asignación
+            # 0: Salto inicial
+            ("GOTO", "_", "_", 1),       
+            
+            # 1: Asignación
             ("=", "10", "_", "x"),
             
-            # 1: Evaluación primer 'si'
+            # 2: Evaluación primer 'si'
             (">", "x", "5", "t1"),
-            # 2: GOTOF primer 'si' -> salta al 'sino' externo (cuádruplo 7)
-            ("GOTOF", "t1", "_", 7),
             
-            # 3: Evaluación 'si' interno
+            # 3: GOTOF primer 'si' -> salta al 'sino' externo (cuádruplo 8)
+            ("GOTOF", "t1", "_", 8),
+            
+            # 4: Evaluación 'si' interno
             ("==", "x", "10", "t2"),
-            # 4: GOTOF 'si' interno -> salta fuera del 'si' interno (cuádruplo 6)
-            ("GOTOF", "t2", "_", 6),
             
-            # 5: Cuerpo del 'si' interno
+            # 5: GOTOF 'si' interno -> salta fuera del 'si' interno (cuádruplo 7)
+            ("GOTOF", "t2", "_", 7),
+            
+            # 6: Cuerpo del 'si' interno
             ("PRINT", "10", "_", "_"),
             
-            # 6: GOTO incondicional del primer 'si' -> salta fuera de todo (cuádruplo 8)
-            ("GOTO", "_", "_", 8),
+            # 7: GOTO incondicional del primer 'si' -> salta fuera de todo (cuádruplo 9)
+            ("GOTO", "_", "_", 9),
             
-            # 7: Cuerpo del 'sino' externo
+            # 8: Cuerpo del 'sino' externo
             ("PRINT", "0", "_", "_")
         ]
     )
@@ -119,11 +126,10 @@ def test_generacion_cuadruplos_condicional(nombre_prueba, codigo, expected_ops):
     # Act
     cuadruplos = compilar_y_obtener_cuadruplos(codigo)
     
-    # Assert - Verificamos que se genere la cantidad correcta de cuádruplos
-    assert len(cuadruplos) == len(expected_ops), \
-        f"Fallo en {nombre_prueba}: Se esperaban {len(expected_ops)} cuádruplos, se obtuvieron {len(cuadruplos)}."
+    # Assert - Verificamos cantidad
+    assert len(cuadruplos) == len(expected_ops), f"Fallo en {nombre_prueba}: Se esperaban {len(expected_ops)} cuádruplos, se obtuvieron {len(cuadruplos)}."
     
-    # Assert - Verificamos el contenido exacto de cada cuádruplo
+    # Assert - Verificamos cada instrucción
     for i, (cuadruplo, (exp_op, exp_op1, exp_op2, exp_res)) in enumerate(zip(cuadruplos, expected_ops)):
         assert cuadruplo.operador == exp_op, f"[{i}] Operador incorrecto: esperado '{exp_op}', obtenido '{cuadruplo.operador}'"
         assert str(cuadruplo.operando1) == exp_op1, f"[{i}] Operando 1 incorrecto: esperado '{exp_op1}', obtenido '{cuadruplo.operando1}'"

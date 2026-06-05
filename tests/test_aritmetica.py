@@ -23,6 +23,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         """,
         # Lista esperada de tuplas: (operador, operando1, operando2, resultado)
         [
+            ("GOTO", "_", "_", 1),       # Salto inicial al final del inicio
             ("+", "5", "3", "t1"),
             ("PRINT", "t1", "_", "_")
         ]
@@ -36,6 +37,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
+            ("GOTO", "_", "_", 1),       # Salto inicial al final del inicio
             ("+", "5", "3", "t1"),     # Resuelve primero el paréntesis
             ("*", "t1", "2", "t2"),    # Multiplica el temporal por 2
             ("PRINT", "t2", "_", "_")  # Imprime el temporal final
@@ -50,6 +52,7 @@ def compilar_y_obtener_cuadruplos(codigo: str) -> list:
         } fin
         """,
         [
+            ("GOTO", "_", "_", 1),       # Salto inicial al final del inicio
             ("/", "4", "2", "t1"),     # La división tiene mayor precedencia
             ("-", "10", "t1", "t2"),
             ("PRINT", "t2", "_", "_")
