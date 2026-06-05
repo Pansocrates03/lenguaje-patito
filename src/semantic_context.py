@@ -1,3 +1,11 @@
+class Funcion:
+    def __init__(self, nombre, tipo=None):
+        self.nombre = nombre
+        self.tipo = tipo
+        self.parametros = []
+        self.variables = {}
+        self.cuadruplo_inicio = None
+
 class Cuadruplo:
     def __init__(self, operador, operando1=None, operando2=None, resultado=None):
         self.operador = operador
@@ -15,6 +23,7 @@ class SemanticContext:
         self.pila_operadores = []
         self.pila_tipos = []
         self.pila_saltos = []
+        self.pila_llamadas = []  # Para manejar contextos de llamadas a funciones
 
         #Cuadruplos
         self.fila_cuadruplos: list[Cuadruplo] = []

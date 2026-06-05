@@ -7,6 +7,37 @@ def make_actions(ctx):
     como un diccionario, listas para asignarse con setParseAction.
     """
 
+    # ── PROGRAMA PRINCIPAL ────────────────────────────────────────────────────
+
+    def action_programa_inicio(s, l, tokens):
+        """
+        PN1 — Al leer 'programa id ;'.
+        Genera el cuádruplo GOTO incondicional que brincará las funciones.
+        Guarda su posición en la pila de saltos.
+        """
+        # Generar GOTO con destino pendiente
+        ctx.fila_cuadruplos.append(Cuadruplo("GOTO", "_", "_", "_"))
+        
+        # Guardar el índice (que debe ser estrictamente 0) en la pila
+        ctx.pila_saltos.append(len(ctx.fila_cuadruplos) - 1)
+        return tokens
+
+    def action_main_inicio(s, l, tokens):
+        """
+        PN2 — Al leer la palabra reservada 'inicio'.
+        Rellena el GOTO inicial con la posición del primer cuádruplo del main.
+        """
+        # Como las funciones y ciclos resuelven sus propios saltos, 
+        # el único salto que debería quedar en el fondo de la pila es el del GOTO inicial.
+        if not ctx.pila_saltos:
+            raise Exception("Error interno: No se encontró el salto inicial del programa.")
+            
+        salto_main = ctx.pila_saltos.pop(0) # pop(0) asegura que tomamos el salto base
+        
+        # Rellenar el cuádruplo 0 con el contador actual
+        ctx.fila_cuadruplos[salto_main].resultado = len(ctx.fila_cuadruplos)
+        return tokens
+
     # ── EXPRESIÓN ────────────────────────────────────────────────────────────
 
     def action_operando(s, l, tokens):
@@ -309,7 +340,27 @@ def make_actions(ctx):
         PN — Al reconocer el identificador de la función llamada.
         Verifica que la función exista en directorio_funciones.
         """
-        # ejecutar PN llamada_inicio...
+        nombre_func = tokens[0]
+        
+        # 1. Buscar la función en el directorio global
+        func_info = None
+        for func in ctx.directorio_funciones:
+            if func["nombre"] == nombre_func:
+                func_info = func
+                break
+                
+        if not func_info:
+            raise Exception(f"Error semántico: Función '{nombre_func}' no declarada.")
+            
+        # 2. Generar cuádruplo ERA (Expansión del Registro de Activación)
+        ctx.fila_cuadruplos.append(Cuadruplo("ERA", nombre_func, "_", "_"))
+        
+        # 3. Empujar a la pila de llamadas para rastrear los parámetros
+        ctx.pila_llamadas.append({
+            "nombre": nombre_func,
+            "k": 0, # Contador de argumentos actuales
+            "info": func_info # Referencia rápida a sus datos
+        })
         return tokens
 
     def action_llamada_arg(s, l, tokens):
@@ -318,7 +369,29 @@ def make_actions(ctx):
         Verifica tipo del argumento contra la firma de la función
         y genera cuádruplo PARAM.
         """
-        # ejecutar PN llamada_arg...
+        llamada_actual = ctx.pila_llamadas[-1]
+        k = llamada_actual["k"]
+        func_info = llamada_actual["info"]
+        parametros_esperados = func_info["parametros"]
+        
+        # 1. Verificar que no estemos mandando parámetros de más
+        if k >= len(parametros_esperados):
+            raise Exception(f"Error semántico: Demasiados argumentos para la función '{func_info['nombre']}'.")
+            
+        # 2. Sacar el argumento resuelto de las pilas
+        argumento = ctx.pila_operandos.pop()
+        tipo_arg = ctx.pila_tipos.pop()
+        
+        # 3. Verificar que el tipo coincida con la firma
+        tipo_esperado = parametros_esperados[k]["tipo"]
+        if tipo_arg != tipo_esperado:
+            raise Exception(f"Error semántico: Parámetro {k+1} en '{func_info['nombre']}' esperaba '{tipo_esperado}', recibió '{tipo_arg}'.")
+            
+        # 4. Generar cuádruplo PARAM (ej. PARAM, t1, _, param0)
+        ctx.fila_cuadruplos.append(Cuadruplo("PARAM", argumento, "_", f"param{k}"))
+        
+        # 5. Incrementar el contador
+        llamada_actual["k"] += 1
         return tokens
 
     def action_llamada_end(s, l, tokens):
@@ -327,7 +400,24 @@ def make_actions(ctx):
         Verifica que el número de argumentos coincida con la firma
         y genera cuádruplo GOSUB.
         """
-        # ejecutar PN llamada_end...
+        llamada_actual = ctx.pila_llamadas.pop()
+        func_info = llamada_actual["info"]
+        
+        # 1. Verificar que no falten parámetros
+        if llamada_actual["k"] < len(func_info["parametros"]):
+            raise Exception(f"Error semántico: Faltan argumentos para la función '{func_info['nombre']}'.")
+            
+        # 2. Generar GOSUB al cuádruplo donde inicia la función
+        cuadruplo_inicio = func_info.get("cuadruplo_inicio", "_")
+        ctx.fila_cuadruplos.append(Cuadruplo("GOSUB", func_info["nombre"], "_", cuadruplo_inicio))
+        
+        # 3. Si la función NO es nula, extraer su retorno a un temporal
+        if func_info["tipo"] != "nula" and func_info["tipo"] is not None:
+            temporal = ctx.nuevo_temporal()
+            # Simulamos que el valor de retorno se guarda en una variable global con el nombre de la función
+            ctx.fila_cuadruplos.append(Cuadruplo("=", func_info["nombre"], "_", temporal))
+            ctx.pila_operandos.append(temporal)
+            ctx.pila_tipos.append(func_info["tipo"])
         return tokens
 
     # ── IMPRIME ───────────────────────────────────────────────────────────────
@@ -377,7 +467,51 @@ def make_actions(ctx):
         Crea una nueva entrada en directorio_funciones y la marca
         como funcion_en_construccion en el contexto.
         """
-        # ejecutar PN funcion_inicio...
+        tipo_func = tokens[0]
+        nombre_func = tokens[1]
+        
+        # 1. Validar que la función no exista ya en el contexto global
+        for func in ctx.directorio_funciones:
+            if func["nombre"] == nombre_func:
+                raise Exception(f"Error semántico: La función '{nombre_func}' ya fue declarada.")
+                
+        # 2. Crear la nueva entrada en el directorio
+        nueva_func = {
+            "nombre": nombre_func,
+            "tipo": tipo_func,
+            "variables": {},
+            "parametros": [],
+            # Guardamos en qué cuádruplo inicia para cuando hagamos el GOSUB
+            "cuadruplo_inicio": len(ctx.fila_cuadruplos) 
+        }
+        
+        ctx.directorio_funciones.append(nueva_func)
+        
+        # 3. Marcarla como la función activa para que las variables locales caigan aquí
+        ctx.funcion_en_construccion = nueva_func
+        return tokens
+    
+    def action_funcion_param(s, l, tokens):
+        """
+        PN2 — Al reconocer un parámetro en la firma. Valida que no haya duplicados,
+        registra el nombre y tipo en la tabla de variables locales de la función
+        en construcción, y también en la lista de parámetros para validación futura.
+        """
+        # tokens tiene la forma: [IDENTIFICADOR, ":", TIPO]
+        nombre_param = tokens[0]
+        tipo_param = tokens[2]
+        
+        func_actual = ctx.funcion_en_construccion
+        
+        # 1. Validar que no haya parámetros con nombres duplicados
+        if nombre_param in func_actual["variables"]:
+            raise Exception(f"Error semántico: Parámetro '{nombre_param}' duplicado.")
+            
+        # 2. Registrar en la tabla de variables locales
+        func_actual["variables"][nombre_param] = tipo_param
+        
+        # 3. Registrar en la firma de la función (útil para validar la llamada después)
+        func_actual["parametros"].append({"nombre": nombre_param, "tipo": tipo_param})
         return tokens
 
     def action_funcion_end(s, l, tokens):
@@ -386,12 +520,22 @@ def make_actions(ctx):
         Genera cuádruplo ENDFUNC, cierra funcion_en_construccion
         y limpia la tabla de variables locales.
         """
-        # ejecutar PN funcion_end...
+        # 1. Generar el cuádruplo de retorno/fin de función
+        ctx.fila_cuadruplos.append(Cuadruplo("ENDFUNC", "_", "_", "_"))
+        
+        # 2. Limpiar el contexto de construcción para volver al scope global
+        ctx.funcion_en_construccion = None
+        
+        # (Opcional) Si deseas reciclar los números de tus temporales locales
+        # ctx.contador_temp = 0 
         return tokens
 
     # ── EXPORTAR ──────────────────────────────────────────────────────────────
 
     return {
+        # Programa principal
+        "action_programa_inicio": action_programa_inicio,
+        "action_main_inicio": action_main_inicio,
         # Expresión aritmética / relacional
         "action_operando":      action_operando,
         "action_mul_op":        action_mul_op,
@@ -423,6 +567,7 @@ def make_actions(ctx):
         # Declaraciones y funciones
         "action_vars_decl":     action_vars_decl,
         "action_funcion_inicio": action_funcion_inicio,
+        "action_funcion_param":  action_funcion_param,
         "action_funcion_end":   action_funcion_end,
         # Test
         "test": lambda s, l, t: print(f"DEBUG test action triggered with tokens: {t}")

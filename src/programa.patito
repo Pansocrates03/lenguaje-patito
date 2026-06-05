@@ -5,6 +5,15 @@ vars
     y: flotante;
     resultado: flotante;
 
+nula fun1(abc: entero){
+    vars
+        x: entero;
+    {
+        x = 2+2;
+        abc = x;
+    }
+};
+
 inicio
 {
     x = 10;
@@ -21,5 +30,7 @@ inicio
     } sino {
         escribe(321);
     };
+
+    fun1(12);
 }
 fin
