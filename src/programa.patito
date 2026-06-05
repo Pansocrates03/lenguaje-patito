@@ -2,35 +2,19 @@ programa mi_programa;
 
 vars
     x: entero;
-    y: flotante;
-    resultado: flotante;
 
-nula fun1(abc: entero){
+entero fun1(x: entero){
     vars
-        x: entero;
+        y: entero;
     {
-        x = 2+2;
-        abc = x;
+        y = 2;
+
+        regresa x+y;
     }
 };
 
 inicio
 {
-    x = 10;
-    y = 3.14;
-    resultado = 1 + (2 - 2) * 4;
-    escribe (x);
-
-    mientras (x > 10) haz {
-        escribe(x);
-    };
-
-    si (3 > 1) {
-        escribe(123);
-    } sino {
-        escribe(321);
-    };
-
-    fun1(12);
+    x = fun1(10);
 }
 fin
