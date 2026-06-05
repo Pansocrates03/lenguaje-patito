@@ -8,9 +8,9 @@ class Compilador:
         self.semantic = SemanticContext()
         self.lenguaje_patito = crear_gramática(self.semantic)
 
-    def run_tests(self):
-        from tests.test_aritmetica import run_tests
-        run_tests()
+    #def run_tests(self):
+    #    from tests.test_aritmetica import test_generacion_cuadruplos
+    #    run_tests()
 
     def cargar_archivo(self, filename="programa.patito"):
         try:
@@ -43,6 +43,19 @@ class Compilador:
         else:
             print("\nNo se generaron cuádruplos.")
 
+    def exportar_cuadruplos(self, filename="cuadruplos.txt"):
+        cuadruplos = self.semantic.obtener_cuadruplos()
+        if cuadruplos:
+            try:
+                with open(filename, 'w') as file:
+                    for i, cuad in enumerate(cuadruplos):
+                        file.write(f"{i}: {cuad}\n")
+                print(f"Cuádruplos exportados a '{filename}' correctamente.")
+            except Exception as e:
+                print(f"Error al exportar cuádruplos: {e}")
+        else:
+            print("No hay cuádruplos para exportar.")
+
 def main():
     if len(sys.argv) != 2:
         print("Usage: python script.py <filename>")
@@ -52,6 +65,7 @@ def main():
     compilador = Compilador()
     compilador.cargar_archivo(sys.argv[1])
     compilador.imprimir_cuadruplos()
+    #compilador.exportar_cuadruplos()
 
 
 if __name__ == "__main__":

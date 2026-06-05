@@ -80,7 +80,7 @@ def crear_gramática(semantic_context):
     EXPRESION <<= (
         EXP
         + Optional(
-            (Literal(">") | Literal("<") | Literal("!=") | Literal("=="))
+            (Literal(">") | Literal("<") | Literal("!=") | Literal("==")).setParseAction(actions["action_rel_op"])
             + EXP
         )
     ).setParseAction(actions["action_expresion_end"])
@@ -102,12 +102,13 @@ def crear_gramática(semantic_context):
     )
 
     CICLO = (
-        Literal("mientras")
+        Literal("mientras").addParseAction(actions["action_ciclo_inicio"])
         + Literal("(")
-        + EXPRESION
+        + EXPRESION.copy().addParseAction(actions["action_ciclo_eval"])
         + Literal(")")
+        + Literal("haz")
         + CUERPO
-        + Literal(";")
+        + Literal(";").addParseAction(actions["action_ciclo_end"])
     )
 
     IMPRIME_ITEM = (LETRERO | EXPRESION).copy().addParseAction(actions["action_imprime_item"])

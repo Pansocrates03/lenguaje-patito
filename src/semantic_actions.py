@@ -41,6 +41,14 @@ def make_actions(ctx):
         """
         ctx.push_operador(tokens[0])
         return tokens
+    
+    def action_rel_op(s, l, tokens):
+        """
+        PN — Al reconocer >, <, != o ==.
+        Empuja el operador relacional a pila_operadores.
+        """
+        ctx.push_operador(tokens[0])
+        return tokens
 
     def action_expresion_end(s, l, tokens):
         """
@@ -226,7 +234,7 @@ def make_actions(ctx):
         Guarda la posición actual del contador de cuádruplos en pila_saltos
         para saber a dónde regresar al final del ciclo.
         """
-        # ejecutar PN ciclo_inicio...
+        ctx.pila_saltos.append(len(ctx.fila_cuadruplos))
         return tokens
 
     def action_ciclo_eval(s, l, tokens):
@@ -234,7 +242,20 @@ def make_actions(ctx):
         PN — Al terminar la EXPRESIÓN de la condición del ciclo.
         Genera cuádruplo GOTOF y empuja su posición a pila_saltos.
         """
-        # ejecutar PN ciclo_eval...
+        # 1. Verificar tipo de la expresión
+        tipo_res = ctx.pila_tipos.pop()
+        if tipo_res != "bool":
+            raise Exception("Error semántico: La condición del ciclo 'mientras' debe ser booleana.")
+
+        # 2. Obtener el resultado de la evaluación
+        resultado = ctx.pila_operandos.pop()
+
+        # 3. Generar cuádruplo GOTOF con destino pendiente ("_")
+        ctx.fila_cuadruplos.append(Cuadruplo("GOTOF", resultado, "_", "_"))
+        
+        # 4. Guardar la posición de este GOTOF para rellenarlo al final
+        ctx.pila_saltos.append(len(ctx.fila_cuadruplos) - 1)
+        
         return tokens
 
     def action_ciclo_end(s, l, tokens):
@@ -243,7 +264,18 @@ def make_actions(ctx):
         Genera cuádruplo GOTO al inicio del ciclo,
         rellena el GOTOF pendiente en pila_saltos.
         """
-        # ejecutar PN ciclo_end...
+        # 1. Sacar el índice del GOTOF pendiente de la pila
+        falso = ctx.pila_saltos.pop()
+        
+        # 2. Sacar el índice de retorno (al inicio del ciclo)
+        retorno = ctx.pila_saltos.pop()
+
+        # 3. Generar GOTO incondicional para repetir el ciclo
+        ctx.fila_cuadruplos.append(Cuadruplo("GOTO", "_", "_", retorno))
+
+        # 4. Rellenar el salto pendiente del GOTOF
+        # El destino es el cuádruplo actual (el que sigue después del GOTO)
+        ctx.fila_cuadruplos[falso].resultado = len(ctx.fila_cuadruplos)
         return tokens
 
     # ── LLAMADA A FUNCIÓN ─────────────────────────────────────────────────────
@@ -340,6 +372,7 @@ def make_actions(ctx):
         "action_operando":      action_operando,
         "action_mul_op":        action_mul_op,
         "action_add_op":        action_add_op,
+        "action_rel_op":        action_rel_op,
         "action_expresion_end": action_expresion_end,
         "action_factor_abre_paren": action_factor_abre_paren,
         "action_factor_cierra_paren": action_factor_cierra_paren,

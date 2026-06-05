@@ -11,5 +11,9 @@ inicio
     y = 3.14;
     resultado = 1 + (2 - 2) * 4;
     escribe (x);
+
+    mientras (x > 10) haz {
+        escribe(x);
+    };
 }
 fin
