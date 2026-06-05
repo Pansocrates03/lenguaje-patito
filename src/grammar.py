@@ -95,11 +95,15 @@ def crear_gramática(semantic_context):
     CONDICION = (
         Literal("si")
         + Literal("(")
-        + EXPRESION 
+        + EXPRESION.copy().addParseAction(actions["action_condicion_eval"]) # PN1
         + Literal(")")
         + CUERPO
-        + Optional(Literal("sino") + CUERPO)
-    )
+        + Optional(
+            Literal("sino").addParseAction(actions["action_condicion_sino"]) # PN2
+            + CUERPO
+        )
+        + Literal(";")
+    ).addParseAction(actions["action_condicion_end"]) # PN3
 
     CICLO = (
         Literal("mientras").addParseAction(actions["action_ciclo_inicio"])

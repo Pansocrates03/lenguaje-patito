@@ -15,5 +15,11 @@ inicio
     mientras (x > 10) haz {
         escribe(x);
     };
+
+    si (3 > 1) {
+        escribe(123);
+    } sino {
+        escribe(321);
+    };
 }
 fin

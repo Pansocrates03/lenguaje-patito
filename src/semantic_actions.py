@@ -205,7 +205,17 @@ def make_actions(ctx):
         PN — Al terminar la EXPRESIÓN de la condición del 'si'.
         Genera cuádruplo GOTOF y empuja la posición a pila_saltos.
         """
-        # ejecutar PN condicion_eval...
+        tipo_res = ctx.pila_tipos.pop()
+        if tipo_res != "bool":
+            raise Exception("Error semántico: La condición del 'si' debe ser booleana.")
+
+        resultado = ctx.pila_operandos.pop()
+        
+        # Generar GOTOF con destino pendiente
+        ctx.fila_cuadruplos.append(Cuadruplo("GOTOF", resultado, "_", "_"))
+        
+        # Guardar la posición para rellenarlo después
+        ctx.pila_saltos.append(len(ctx.fila_cuadruplos) - 1)
         return tokens
 
     def action_condicion_sino(s, l, tokens):
@@ -214,7 +224,17 @@ def make_actions(ctx):
         Genera cuádruplo GOTO para saltar el bloque sino,
         rellena el GOTOF pendiente en pila_saltos.
         """
-        # ejecutar PN condicion_sino...
+        # 1. Generar GOTO incondicional para brincar el bloque falso
+        ctx.fila_cuadruplos.append(Cuadruplo("GOTO", "_", "_", "_"))
+        
+        # 2. Rescatar el GOTOF pendiente del si
+        falso = ctx.pila_saltos.pop()
+        
+        # 3. Empujar el nuevo GOTO incondicional a la pila
+        ctx.pila_saltos.append(len(ctx.fila_cuadruplos) - 1)
+        
+        # 4. Rellenar el destino del GOTOF hacia este bloque
+        ctx.fila_cuadruplos[falso].resultado = len(ctx.fila_cuadruplos)
         return tokens
 
     def action_condicion_end(s, l, tokens):
@@ -223,7 +243,11 @@ def make_actions(ctx):
         Rellena el GOTO o GOTOF pendiente en pila_saltos con
         el contador de cuádruplos actual.
         """
-        # ejecutar PN condicion_end...
+        # Sacar el salto pendiente (ya sea el GOTOF inicial o el GOTO del sino)
+        fin = ctx.pila_saltos.pop()
+        
+        # Rellenarlo con el cuádruplo actual
+        ctx.fila_cuadruplos[fin].resultado = len(ctx.fila_cuadruplos)
         return tokens
 
     # ── CICLO (mientras) ──────────────────────────────────────────────────────
