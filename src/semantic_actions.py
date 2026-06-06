@@ -144,31 +144,14 @@ def make_actions(ctx):
         nombre = tokens[0]
         tipo = None
 
-        # 1. Buscar en scope local si estamos dentro de una función
-        if ctx.funcion_en_construccion:
-            tabla_local = ctx.funcion_en_construccion.get("variables", {})
-            params_local = {p["nombre"]: p["tipo"] for p in ctx.funcion_en_construccion.get("parametros", [])}
-            if nombre in tabla_local:
-                tipo = tabla_local[nombre]
-            elif nombre in params_local:
-                tipo = params_local[nombre]
+        # 1. Utilizamos tus helpers del contexto (que ya saben buscar en local, parámetros y global)
+        tipo = ctx._buscar_tipo_variable(nombre)
+        dir_virtual = ctx._buscar_direccion_variable(nombre)
 
-        # 2. Siempre buscar en scope global como fallback
-        if tipo is None:
-            tabla_global = ctx.directorio_funciones[0].get("variables", {})
-            if nombre in tabla_global:
-                tipo = tabla_global[nombre]
-
-        # 3. Si no existe en ningún lado, error
-        if tipo is None:
-            raise Exception(f"Variable '{nombre}' no declarada")
-
-        ctx.pila_operandos.append(nombre)
+        # 2. Empujamos la dirección de memoria virtual (ej. 1000) en lugar del nombre ('x')
+        ctx.pila_operandos.append(dir_virtual)
         ctx.pila_tipos.append(tipo)
 
-        print(f"DEBUG asigna_id - empujé: {nombre} tipo: {tipo}")
-        print(f"DEBUG asigna_id - pila_operandos: {ctx.pila_operandos}")
-        print(f"DEBUG asigna_id - pila_tipos: {ctx.pila_tipos}")
         return tokens
 
     def action_asigna_op(s, l, tokens):
@@ -443,7 +426,6 @@ def make_actions(ctx):
 
     def action_vars_decl(s, l, tokens):
         token_list = list(tokens)
-        print(f"DEBUG vars_decl tokens: {token_list}")
         
         # El último token es el tipo, todo lo anterior son identificadores
         var_type = token_list[-1]
@@ -451,11 +433,9 @@ def make_actions(ctx):
         if var_type not in ["entero", "flotante"]:
             raise Exception(f"Error: tipo inválido '{var_type}'")
 
-        for token in token_list[:-1]:
-            if ctx.funcion_en_construccion:
-                ctx.funcion_en_construccion["variables"][token] = var_type
-            else:
-                ctx.directorio_funciones[0]["variables"][token] = var_type
+        # Iteramos correctamente sobre cada identificador de la lista
+        for nombre_var in token_list[:-1]:
+            ctx.registrar_variable(nombre_var, var_type)
 
         return tokens
 
@@ -508,7 +488,7 @@ def make_actions(ctx):
             raise Exception(f"Error semántico: Parámetro '{nombre_param}' duplicado.")
             
         # 2. Registrar en la tabla de variables locales
-        func_actual["variables"][nombre_param] = tipo_param
+        ctx.registrar_variable(nombre_param, tipo_param)
         
         # 3. Registrar en la firma de la función (útil para validar la llamada después)
         func_actual["parametros"].append({"nombre": nombre_param, "tipo": tipo_param})
