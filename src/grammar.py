@@ -11,7 +11,7 @@ def crear_gramática(semantic_context):
         Keyword("programa") | Keyword("vars") | Keyword("entero") | 
         Keyword("flotante") | Keyword("inicio") | Keyword("fin") |
         Keyword("si") | Keyword("sino") | Keyword("mientras") | 
-        Keyword("escribe") | Keyword("nula")
+        Keyword("escribe") | Keyword("nula") | Keyword("regresa")
     )
     
     # TOKENS
@@ -61,7 +61,7 @@ def crear_gramática(semantic_context):
     ).add_parse_action(actions["action_factor_signo"])
 
     # FACTOR sin acción global — cada camino tiene la suya
-    FACTOR = factor_paren | factor_base | LLAMADA
+    FACTOR = factor_paren | LLAMADA | factor_base
         
     TERMINO = (
         FACTOR
@@ -144,12 +144,19 @@ def crear_gramática(semantic_context):
         + Literal(")").add_parse_action(actions["action_llamada_end"])
     )
 
+    REGRESA = (
+        Literal('regresa')
+        + EXPRESION.copy().addParseAction(actions["action_regresa"])
+        + Literal(';')
+    )
+
     ESTATUTO <<= (
         (LLAMADA  + Literal(";"))
         | CONDICION
         | CICLO
         | ASIGNA
         | IMPRIME
+        | REGRESA
         | (Literal("[") + ZeroOrMore(ESTATUTO) + Literal("]"))
     )
 

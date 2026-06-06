@@ -510,6 +510,40 @@ def make_actions(ctx):
         # ctx.contador_temp = 0 
         return tokens
 
+    # ── REGRESA ───────────────────────────────────────────────────────────────
+
+    def action_regresa(s, l, tokens):
+        """
+        PN1 — Al terminar la EXPRESION del estatuto regresa.
+        Verifica que la función no sea nula, que el tipo coincida 
+        y genera el cuádruplo RETURN.
+        """
+        # 1. Validar que estemos construyendo una función
+        if not ctx.funcion_en_construccion:
+            raise Exception("Error semántico: El estatuto 'regresa' solo puede usarse dentro de una función.")
+            
+        func_actual = ctx.funcion_en_construccion
+        tipo_esperado = func_actual["tipo"]
+        
+        # 2. Validar que la función no sea nula
+        if tipo_esperado == "nula" or tipo_esperado is None:
+            raise Exception(f"Error semántico: La función '{func_actual['nombre']}' es nula y no debe retornar un valor.")
+            
+        # 3. Sacar el resultado de la pila
+        resultado = ctx.pila_operandos.pop()
+        tipo_resultado = ctx.pila_tipos.pop()
+        
+        # 4. Validar que los tipos coincidan
+        if tipo_esperado != tipo_resultado:
+            raise Exception(f"Error semántico: La función '{func_actual['nombre']}' esperaba retornar '{tipo_esperado}', pero se retornó '{tipo_resultado}'.")
+            
+        # 5. Emitir el cuádruplo de retorno
+        # (En la Máquina Virtual, este cuádruplo tomará el valor de 'resultado' 
+        # y lo guardará en la dirección global de la función).
+        ctx.fila_cuadruplos.append(Cuadruplo("RETURN", resultado, "_", "_"))
+        
+        return tokens
+
     # ── EXPORTAR ──────────────────────────────────────────────────────────────
 
     return {
@@ -549,6 +583,8 @@ def make_actions(ctx):
         "action_funcion_inicio": action_funcion_inicio,
         "action_funcion_param":  action_funcion_param,
         "action_funcion_end":   action_funcion_end,
+        # Regresa
+        "action_regresa":       action_regresa,
         # Test
         "test": lambda s, l, t: print(f"DEBUG test action triggered with tokens: {t}")
     }
