@@ -124,15 +124,26 @@ def make_actions(ctx):
             signo    = None
             operando = token_list[0]
 
-        # push_operando ya determina el tipo internamente
+        # push_operando ya determina el tipo internamente y empuja la dirección virtual
         ctx.push_operando(operando)
 
-        # Si hay signo negativo, generar cuádruplo (*, -1, operando, t1)
+        # Si hay signo negativo, generar cuádruplo (*, dir_de_-1, operando, t1)
         if signo == "-":
             op = ctx.pila_operandos.pop()
             tp = ctx.pila_tipos.pop()
-            resultado = ctx.nuevo_temporal()
-            ctx.fila_cuadruplos.append(Cuadruplo("*", "-1", op, resultado))
+            
+            # 1. Obtener la dirección virtual de la constante "-1"
+            if "-1" not in ctx.tabla_constantes:
+                ctx.tabla_constantes["-1"] = ctx.contador_constantes_enteras
+                ctx.contador_constantes_enteras += 1
+            dir_menos_uno = ctx.tabla_constantes["-1"]
+
+            # 2. Pedir un temporal pasándole el tipo (el resultado conserva el tipo original)
+            resultado = ctx.nuevo_temporal(tp)
+            
+            # 3. Emitir el cuádruplo con puras direcciones virtuales
+            ctx.fila_cuadruplos.append(Cuadruplo("*", dir_menos_uno, op, resultado))
+            
             ctx.pila_operandos.append(resultado)
             ctx.pila_tipos.append(tp)
 
@@ -396,7 +407,7 @@ def make_actions(ctx):
         
         # 3. Si la función NO es nula, extraer su retorno a un temporal
         if func_info["tipo"] != "nula" and func_info["tipo"] is not None:
-            temporal = ctx.nuevo_temporal()
+            temporal = ctx.nuevo_temporal(func_info["tipo"])
             # Simulamos que el valor de retorno se guarda en una variable global con el nombre de la función
             ctx.fila_cuadruplos.append(Cuadruplo("=", func_info["nombre"], "_", temporal))
             ctx.pila_operandos.append(temporal)
@@ -509,8 +520,8 @@ def make_actions(ctx):
         # (Opcional) Si deseas reciclar los números de tus temporales locales
         # ctx.contador_temp = 0 
         return tokens
-
-    # ── REGRESA ───────────────────────────────────────────────────────────────
+    
+     # ── REGRESA ───────────────────────────────────────────────────────────────
 
     def action_regresa(s, l, tokens):
         """

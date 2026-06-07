@@ -2,16 +2,13 @@ import sys
 from grammar import crear_gramática
 from semantic_context import SemanticContext
 import json
+import os
 
 class Compilador:
 
     def __init__(self):
         self.semantic = SemanticContext()
         self.lenguaje_patito = crear_gramática(self.semantic)
-
-    #def run_tests(self):
-    #    from tests.test_aritmetica import test_generacion_cuadruplos
-    #    run_tests()
 
     def cargar_archivo(self, filename="programa.patito"):
         try:
@@ -37,17 +34,13 @@ class Compilador:
 
     def imprimir_constantes(self):
         ce = self.semantic.tabla_constantes
-
         print ("\n=== CONSTANTES ===")
         print(json.dumps(ce, indent=4))
 
     def imprimir_directorio_funciones(self):    
         df = self.semantic.directorio_funciones
-
         print ("\n=== DIRECTORIO DE FUNCIONES ===")
         print(json.dumps(df, indent=4))
-
-
     
     def imprimir_cuadruplos(self):
         cuadruplos = self.semantic.obtener_cuadruplos()
@@ -58,39 +51,50 @@ class Compilador:
         else:
             print("\nNo se generaron cuádruplos.")
 
-    def exportar(self, filename="cuadruplos.txt"):
+    def exportar(self, filename="programa.obj"):
         """
-        Exporta las constantes, el directorio de funciones y los cuádruplos a un archivo de texto.
-        para facilitar su revisión y uso posterior.
+        Empaqueta las constantes, el directorio de funciones y los cuádruplos 
+        en un solo archivo JSON (Código Objeto) para la Máquina Virtual.
         """
-
-        # Verificar que exista la carpeta de salida
-        import os
         output_dir = "output"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        
 
-
+        # 1. Invertir constantes (La MV necesita buscar por dirección, ej: { "9000": "3.14" })
         constantes = self.semantic.tabla_constantes
-        funciones = self.semantic.directorio_funciones
-        cuadruplos = self.semantic.obtener_cuadruplos()
-
-        # Invertir la tabla de constantes para mostrar los valores en lugar de las direcciones
         constantes_invertidas = {v: k for k, v in constantes.items()}
 
-        with open(os.path.join(output_dir, filename), 'w') as file:
-            file.write("=== CONSTANTES ===\n")
-            file.write(json.dumps(constantes_invertidas, indent=4))
-            file.write("\n\n=== DIRECTORIO DE FUNCIONES ===\n")
-            file.write(json.dumps(funciones, indent=4))
-            file.write("\n\n=== CUÁDRUPLOS GENERADOS ===\n")
-            for i, cuad in enumerate(cuadruplos):
-                file.write(f"{i}: {cuad}\n")
+        # 2. Directorio de Funciones
+        funciones = self.semantic.directorio_funciones
+
+        # 3. Serializar Cuádruplos a diccionarios
+        cuadruplos_serializados = []
+        for cuad in self.semantic.obtener_cuadruplos():
+            cuadruplos_serializados.append({
+                "operador": cuad.operador,
+                "operando1": cuad.operando1,
+                "operando2": cuad.operando2,
+                "resultado": cuad.resultado
+            })
+
+        # 4. Crear el Objeto Principal
+        codigo_objeto = {
+            "constantes": constantes_invertidas,
+            "directorio_funciones": funciones,
+            "cuadruplos": cuadruplos_serializados
+        }
+
+        # 5. Escribir el archivo JSON
+        ruta_archivo = os.path.join(output_dir, filename)
+        with open(ruta_archivo, 'w') as file:
+            json.dump(codigo_objeto, file, indent=4)
+            
+        print(f"\n¡Código Objeto exportado con éxito a '{ruta_archivo}'!")
+
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python script.py <filename>")
+        print("Usage: python compilador.py <filename>")
         sys.exit(1)
 
     # Cargar archivo
@@ -100,7 +104,6 @@ def main():
     compilador.imprimir_directorio_funciones()
     compilador.imprimir_cuadruplos()
     compilador.exportar()
-
 
 if __name__ == "__main__":
     main()

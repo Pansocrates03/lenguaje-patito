@@ -1,20 +1,61 @@
-programa mi_programa;
+programa taquilla_teatro;
 
 vars
-    x: entero;
+    espectadores: entero;
+    precio_boleto: flotante;
+    ingreso_total: flotante;
 
-entero fun1(x: entero){
+entero contar_asientos(filas: entero, asientos_por_fila: entero) {
     vars
-        y: entero;
+        total: entero;
+        fila_actual: entero;
     {
-        y = 2;
+        total = 0;
+        fila_actual = 0;
 
-        regresa x+y;
+        mientras (fila_actual < filas) haz {
+            total = total + asientos_por_fila;
+            fila_actual = fila_actual + 1;
+        };
+
+        regresa total;
+    }
+};
+
+flotante aplicar_descuento(total_bruto: flotante) {
+    {
+        si (total_bruto > 1000.0) {
+            regresa total_bruto - 150.5;
+        } sino {
+            regresa total_bruto;
+        };
     }
 };
 
 inicio
 {
-    x = fun1(10);
+    escribe("Calculando capacidad del teatro...");
+    
+    espectadores = contar_asientos(10, 15);
+    escribe("Total de espectadores:");
+    escribe(espectadores);
+
+    precio_boleto = 120.5;
+    
+    escribe("Calculando ingreso bruto mixto...");
+    ingreso_total = espectadores * precio_boleto;
+    escribe(ingreso_total);
+
+    escribe("Aplicando descuento especial...");
+    ingreso_total = aplicar_descuento(ingreso_total);
+    escribe("Ingreso neto:");
+    escribe(ingreso_total);
+
+    escribe("Prueba booleana final (debe imprimir 1):");
+    si (espectadores != 150) {
+        escribe(0);
+    } sino {
+        escribe(1);
+    };
 }
 fin

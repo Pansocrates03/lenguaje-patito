@@ -21,7 +21,7 @@ def crear_gramática(semantic_context):
     TIPO = Literal("entero") | Literal("flotante")
     CTE_ENTERA = Word(nums)
     CTE_FLOTANTE = Regex(r'\d+\.\d+')
-    LETRERO = Literal('"') + ZeroOrMore(Word(alphanums + " ")) + Literal('"')
+    LETRERO = Regex(r'"[^"]*"')
 
     # FOWARDING
     # Se necesitan para definir reglas recursivas como EXPRESION y CUERPO
