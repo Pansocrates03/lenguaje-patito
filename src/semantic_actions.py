@@ -1,4 +1,5 @@
 from semantic_context import Cuadruplo
+from actions.test import testaction
 
 def make_actions(ctx):
     """
@@ -344,6 +345,10 @@ def make_actions(ctx):
             "k": 0, # Contador de argumentos actuales
             "info": func_info # Referencia rápida a sus datos
         })
+
+        # CREAR EL FONDO FALSO
+        ctx.pila_operadores.append("(")
+
         return tokens
 
     def action_llamada_arg(s, l, tokens):
@@ -383,6 +388,10 @@ def make_actions(ctx):
         Verifica que el número de argumentos coincida con la firma
         y genera cuádruplo GOSUB.
         """
+        # --- DESTRUIR EL FONDO FALSO ---
+        if ctx.pila_operadores and ctx.pila_operadores[-1] == "(":
+            ctx.pila_operadores.pop()
+
         llamada_actual = ctx.pila_llamadas.pop()
         func_info = llamada_actual["info"]
         
@@ -585,4 +594,6 @@ def make_actions(ctx):
         "action_funcion_end":   action_funcion_end,
         # Regresa
         "action_regresa":       action_regresa,
+        # test
+        "testaction": testaction
     }

@@ -1,0 +1,25 @@
+programa ejemplo_condicional;
+
+vars
+    edad: entero;
+    saldo: flotante;
+
+inicio {
+    edad = 20;
+    saldo = 150.5;
+    
+    escribe("Evaluando condiciones...");
+    
+    si (edad > 17) {
+        escribe("Es mayor de edad.");
+        
+        si (saldo > 100.0) {
+            escribe("Tiene saldo suficiente.");
+        } sino {
+            escribe("No tiene saldo suficiente.");
+        };
+        
+    } sino {
+        escribe("Es menor de edad.");
+    };
+} fin

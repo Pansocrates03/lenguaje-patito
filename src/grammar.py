@@ -52,8 +52,8 @@ def crear_gramática(semantic_context):
     factor_paren = (
         abre_paren
         + EXPRESION
-        + Literal(")")   # sin acción — el pop del ( lo hace finalizar_expresion
-    )
+        + Literal(")")
+    ).add_parse_action(actions["action_factor_cierra_paren"])
 
     # Camino 2: [+|-] id | CTE — con signo opcional
     factor_base = (

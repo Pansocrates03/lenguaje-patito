@@ -1,0 +1,22 @@
+programa ejemplo_ciclo;
+
+vars
+    contador: entero;
+    acumulador: entero;
+    limite: entero;
+
+inicio {
+    limite = 5;
+    contador = 1;
+    acumulador = 1;
+    
+    escribe("Calculando factorial con ciclo...");
+    
+    mientras (contador < limite + 1) haz {
+        acumulador = acumulador * contador;
+        contador = contador + 1;
+    };
+    
+    escribe("El factorial de 5 es:");
+    escribe(acumulador);
+} fin

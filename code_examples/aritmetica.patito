@@ -1,0 +1,20 @@
+programa ejemplo_aritmetica;
+
+vars
+    a, b: entero;
+    c, d: flotante;
+    resultado: flotante;
+
+inicio {
+    a = 10;
+    b = 3;
+    c = 2.5;
+    d = 1.2;
+    
+    escribe("Evaluando expresion aritmetica...");
+    
+    resultado = (a + b) * c - (d / 2.0);
+    
+    escribe("El resultado es:");
+    escribe(resultado);
+} fin

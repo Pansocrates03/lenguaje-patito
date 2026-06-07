@@ -1,0 +1,27 @@
+programa ejemplo_funcion;
+
+vars
+    base: flotante;
+    altura: flotante;
+    area: flotante;
+
+flotante calcular_area_triangulo(b: flotante, a: flotante) {
+    vars
+        resultado: flotante;
+    {
+        resultado = (b * a) / 2.0;
+        regresa resultado;
+    }
+};
+
+inicio {
+    base = 10.5;
+    altura = 4.0;
+    
+    escribe("Llamando a la funcion...");
+    
+    area = calcular_area_triangulo(base, altura);
+    
+    escribe("El area del triangulo es:");
+    escribe(area);
+} fin

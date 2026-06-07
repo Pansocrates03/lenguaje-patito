@@ -126,13 +126,19 @@ class SemanticContext:
     def nuevo_temporal(self, tipo:str):
 
         if tipo == 'entero':
-            return f"{self.contador_temporal_entero}"
+            dir_temp = self.contador_temporal_entero
+            self.contador_temporal_entero += 1
+            return dir_temp
 
         if tipo == 'flotante':
-            return f"{self.contador_temporal_flotante}"
+            dir_temp = self.contador_temporal_flotante
+            self.contador_temporal_flotante += 1
+            return dir_temp
         
         if tipo == 'bool':
-            return f"{self.contador_temporal_booleano}"
+            dir_temp = self.contador_temporal_booleano
+            self.contador_temporal_booleano += 1  # <-- ¡Faltaba incrementar!
+            return dir_temp
 
         # En caso de que haya otro tipo que no de error 
         self.contador_temp += 1
@@ -310,10 +316,6 @@ class SemanticContext:
         """Procesa todos los operadores pendientes al final de una expresión"""
         while self.pila_operadores and self.pila_operadores[-1] != "=" and self.pila_operadores[-1] != "(":
             self.ejecutar_operacion()
-        
-        # Si hay un ( en la cima, significa que terminamos la subexpresión — eliminarlo
-        if self.pila_operadores and self.pila_operadores[-1] == "(":
-            self.pila_operadores.pop()
 
     def obtener_cuadruplos(self):
         """Retorna la lista de cuádruplos generados"""
