@@ -100,9 +100,9 @@ def main():
     # Cargar archivo
     compilador = Compilador()
     compilador.cargar_archivo(sys.argv[1])
-    compilador.imprimir_constantes()
-    compilador.imprimir_directorio_funciones()
-    compilador.imprimir_cuadruplos()
+    #compilador.imprimir_constantes()
+    #compilador.imprimir_directorio_funciones()
+    #compilador.imprimir_cuadruplos()
     compilador.exportar()
 
 if __name__ == "__main__":

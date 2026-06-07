@@ -281,9 +281,6 @@ class SemanticContext:
     # ── operaciones ──────────────────────────────────────────────────────────
 
     def ejecutar_operacion(self):
-        print(f"DEBUG ejecutar_op - pila_operadores: {self.pila_operadores}")
-        print(f"DEBUG ejecutar_op - pila_operandos: {self.pila_operandos}")
-        print(f"DEBUG ejecutar_op - pila_tipos: {self.pila_tipos}")
         """Genera un cuádruplo para la operación en la cima de pila_operadores"""
         if not self.pila_operadores or len(self.pila_operandos) < 2:
             return

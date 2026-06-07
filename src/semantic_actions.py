@@ -51,9 +51,6 @@ def make_actions(ctx):
             token_str = str(token).strip()
             if token_str not in ['(', ')', '+', '-', ''] and token_str:
                 ctx.push_operando(token_str)
-                print(f"DEBUG operando - empujé: {token_str}")
-                print(f"DEBUG operando - pila_operandos: {ctx.pila_operandos}")
-                print(f"DEBUG operando - pila_tipos: {ctx.pila_tipos}")
                 break
         return tokens
 
@@ -94,9 +91,7 @@ def make_actions(ctx):
         PN — Al reconocer un paréntesis de apertura en un FACTOR.
         Empuja el paréntesis a pila_operadores para marcar el inicio de la subexpresión.
         """
-        print(f"DEBUG abre_paren - pila_operadores antes: {ctx.pila_operadores}")
         ctx.pila_operadores.append("(")
-        print(f"DEBUG abre_paren - pila_operadores después: {ctx.pila_operadores}")
         return tokens
     
     def action_factor_cierra_paren(s, l, tokens):
@@ -105,15 +100,12 @@ def make_actions(ctx):
         Resuelve operadores pendientes hasta encontrar el paréntesis de apertura.
         Elimina el paréntesis de apertura de pila_operadores.
         """
-        print(f"DEBUG cierra_paren - pila_operadores antes: {ctx.pila_operadores}")
         while ctx.pila_operadores and ctx.pila_operadores[-1] != "(":
             ctx.ejecutar_operacion()
         ctx.pila_operadores.pop()  # quitar el "("
-        print(f"DEBUG cierra_paren - pila_operadores después: {ctx.pila_operadores}")
         return tokens
     
     def action_factor_signo(s, l, tokens):
-        print(f"DEBUG factor_signo tokens: {list(tokens)}")
         token_list = list(tokens)
         
         # Identificar si hay signo y cuál es el operando
@@ -175,9 +167,6 @@ def make_actions(ctx):
         return tokens
 
     def action_asigna_end(s, l, tokens):
-        print(f"DEBUG asigna_end - pila_operandos: {ctx.pila_operandos}")
-        print(f"DEBUG asigna_end - pila_tipos: {ctx.pila_tipos}")
-        print(f"DEBUG asigna_end - pila_operadores: {ctx.pila_operadores}")
         if len(ctx.pila_tipos) < 2:
             raise Exception("Error de tipos: no hay suficientes tipos en la pila")
         
@@ -596,6 +585,4 @@ def make_actions(ctx):
         "action_funcion_end":   action_funcion_end,
         # Regresa
         "action_regresa":       action_regresa,
-        # Test
-        "test": lambda s, l, t: print(f"DEBUG test action triggered with tokens: {t}")
     }
